@@ -80,8 +80,8 @@ instagram-auto-publisher/
 
 ## 👤 Author
 
-**Iskander Chadoyev**
-Python developer & automation enthusiast
-📍 Kazakhstan
-🐙 GitHub: [chadoyev](https://github.com/chadoyev)
+**Iskander Chadoyev**\
+Python developer & automation enthusiast\
+📍 Kazakhstan\
+🐙 GitHub: [chadoyev](https://github.com/chadoyev)\
 💬 Telegram: [chadoyev](https://t.me/chadoyev)
