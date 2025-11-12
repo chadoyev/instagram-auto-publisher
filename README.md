@@ -79,6 +79,7 @@ instagram-auto-publisher/
 ---
 
 ## 👤 Author
+
 **Iskander Chadoyev**
 Python developer & automation enthusiast
 📍 Kazakhstan
