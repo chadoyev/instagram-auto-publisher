@@ -1,0 +1,367 @@
+from datetime import datetime, timedelta, date
+import time
+import shutil
+from moviepy.editor import *
+from instagrapi import Client
+import json
+import os
+from PIL import Image
+import sqlite3
+import random
+import math
+import threading
+from multiprocessing import Process
+
+cl = Client(json.load(open('authorize.json')))
+name_pablik = "Подписывайся на ..."
+conn = sqlite3.connect('db.db', check_same_thread=False)
+cursor = conn.cursor()
+
+def media_pk_cut(file, ask):
+    if ask == True:
+        ppp = file.count('_')
+        file = os.path.splitext(file)[0]
+        file = (file.split('_')[ppp])
+    try:
+        baza = "SELECT media_description FROM media_descriptions WHERE media_pk = {}".format(file)
+        result = cursor.execute(baza).fetchone()
+        return (result[0])
+    except:
+        return (" ")  # достать описание с БД(ГОТОВО)
+
+def make_watermark(path, file):
+    file_without_wm = os.path.join(path + file)
+    copy = os.path.join(path + "wm_" + file)
+    file_with_wm = os.path.join(path + "with_wm_" + file)
+    shutil.copyfile(file_without_wm, copy)
+    time.sleep(1)
+    video1 = VideoFileClip(copy)
+    audio = AudioFileClip(file_without_wm)
+    logo = (
+        ImageClip("logo.png").set_duration(video1.duration).resize(height=150).margin(opacity=0.1).set_position((0.75, 0.8),
+                                                                                                           relative=True))
+    final = CompositeVideoClip([video1, logo])
+    final = final.set_audio(audio)
+    final.write_videofile(file_with_wm)
+    video1.close()
+    os.remove(copy)
+    return file_with_wm, file_without_wm
+
+def remove_used(path, file):
+    list_f = os.listdir(path)
+    name_file = os.path.splitext(file)[0]
+    for item in list_f:
+        if name_file in os.path.splitext(item)[0]:
+            os.remove(path + item)  # удаление использованного медиа, которое удачно загрузилось(ГОТОВО)
+
+def remove_temp_photo(path, file):
+    list_f = os.listdir(path)
+    name_file = os.path.splitext(file)[0]
+    for item in list_f:
+        if name_file in os.path.splitext(item)[0]:
+            if item.endswith(".jpg"):
+                os.remove(path + item)  # удаление фото превью, в случае ошибки(ГОТОВО)
+
+def get_old_file(path):
+    files = os.listdir(path)
+    files = [os.path.join(path, file) for file in files]
+    files = [file for file in files if os.path.isfile(file)]
+    file_main = min(files, key=os.path.getctime)
+    return (os.path.basename(file_main))  # выбор самого старого файла(ГОТОВО)
+
+def convert_webp_to_jpeg_u(con):
+    if con.endswith(".webp"):
+        fi = os.path.splitext(con)[0]
+        im = Image.open("photo_posts/" + con).convert("RGB")
+        im.save("photo_posts/" + str(fi) + ".jpg", "jpeg")
+        os.remove("photo_posts/" + con)
+        return str(fi+".jpg")
+    else:
+        return con
+
+def upload_story_video():
+    file_with_wm = None
+    try:
+        file = get_old_file("storys/video/")
+        file_with_wm, file_without_wm = make_watermark("storys/video/", file)
+        converter = Process(target=cl.video_upload_to_story, args=(file_with_wm,))
+        converter.start()
+        converter.join()
+        print("Загрузил видео историю: " + str(file_with_wm))
+        for _ in range(10):
+            try:
+                os.remove(file_with_wm)
+                os.remove(file_without_wm)
+                remove_temp_photo("storys/video/", "with_wm_" + file)
+                break
+            except OSError:
+                time.sleep(0.1)
+    except Exception as e:
+        print(e)
+        os.remove(file_with_wm)  # удаляем файл с ВМ, т.к он не загрузился
+        remove_temp_photo("storys/video/", "with_wm_" + file)  # удаялем его превью
+
+def upload_story_image():
+    try:
+        file = get_old_file("storys/photo/")
+        cl.photo_upload_to_story("storys/photo/" + file)
+        print("Загрузил фото историю: " + str(file))
+        for _ in range(10):
+            try:
+                remove_used("storys/photo/", file)
+                break
+            except OSError:
+                time.sleep(0.1)
+    except:
+        pass
+
+def upload_post_image():
+    try:
+        file = get_old_file("photo_posts/")
+        desc = str(media_pk_cut(file, True))
+        cl.photo_upload("photo_posts/" + file, desc)
+        file = convert_webp_to_jpeg_u(file)
+        print("Загрузил фото пост: " + str(file))
+        for _ in range(10):
+            try:
+                remove_used("photo_posts/", file)
+                break
+            except OSError:
+                time.sleep(0.1)
+    except Exception as e:
+        print(str(e))
+
+def upload_post_video():
+    try:
+        file = get_old_file("video_posts/")
+        desc = str(media_pk_cut(file, True))
+        file_with_wm, file_without_wm = make_watermark("video_posts/", file)
+        converter = Process(target=cl.video_upload, args=(file_with_wm, desc))
+        converter.start()
+        converter.join()
+        print("Загрузил видео пост: " + str(file_with_wm))
+        for _ in range(10):
+            try:
+                os.remove(file_with_wm)
+                os.remove(file_without_wm)
+                remove_temp_photo("video_posts/", "with_wm_" + file)
+                break
+            except OSError:
+                time.sleep(0.1)
+    except Exception as e:
+        os.remove(file_with_wm)  # удаляем файл с ВМ, т.к он не загрузился
+        remove_temp_photo("video_posts/", "with_wm_" + file)  # удаялем его превью
+
+def upload_album_posts():
+    try:
+        folders = os.listdir("albums_posts")
+        element = random.choice(folders)
+        desc = str(media_pk_cut(element, False))
+        files = os.listdir("albums_posts/" + element)
+        for key, value in enumerate(files):
+            files[key] = "albums_posts/" + element + "/" + value
+        converter = Process(target=cl.album_upload, args=(files, desc))
+        converter.start()
+        converter.join()
+        print("Загрузил альбомный пост: " + str(files))
+        for _ in range(10):
+            try:
+                shutil.rmtree("albums_posts/" + element)
+                break
+            except OSError:
+                time.sleep(0.1)
+    except:
+        pass
+
+def upload_igtv():
+    try:
+        file = get_old_file("video_posts/igtv/")
+        desc = str(media_pk_cut(file, True))
+        if desc == "":
+            desc = name_pablik
+        file_with_wm, file_without_wm = make_watermark("video_posts/igtv/", file)
+        converter = Process(target=cl.igtv_upload, args=(file_with_wm, desc, " "))
+        converter.start()
+        converter.join()
+        print("Загрузил IGTV пост: " + str(file_with_wm))
+        for _ in range(10):
+            try:
+                os.remove(file_with_wm)
+                os.remove(file_without_wm)
+                remove_temp_photo("video_posts/igtv/", "with_wm_" + file)
+                break
+            except OSError:
+                time.sleep(0.1)
+    except Exception as e:
+        os.remove(file_with_wm)  # удаляем файл с ВМ, т.к он не загрузился
+        remove_temp_photo("video_posts/igtv/", "with_wm_" + file)  # удаялем его превью
+
+def upload_clips():
+    try:
+        file = get_old_file("video_posts/clips/")
+        desc = str(media_pk_cut(file, True))
+        file_with_wm, file_without_wm = make_watermark("video_posts/clips/", file)
+        converter = Process(target=cl.clip_upload, args=(file_with_wm, desc))
+        converter.start()
+        converter.join()
+        print("Загрузил клип: " + str(file_with_wm))
+        for _ in range(10):
+            try:
+                os.remove(file_with_wm)
+                os.remove(file_without_wm)
+                remove_temp_photo("video_posts/clips/", "with_wm_" + file)  #
+                break
+            except OSError:
+                time.sleep(0.1)
+    except Exception as e:
+        print(e)
+        os.remove(file_with_wm)  # удаляем файл с ВМ, т.к он не загрузился
+        remove_temp_photo("video_posts/clips/", "with_wm_" + file)  # удаялем его превью
+
+def get_from_bd(column):
+    baza = "SELECT {} FROM settings".format(column)
+    result = cursor.execute(baza).fetchone()
+    return (result[0])
+
+def set_to_bd(column, value):
+    cursor.execute('UPDATE settings SET "{}"=?'.format(column.replace('"', '""')),
+                   (value,))
+    conn.commit()
+
+def add_count_to_bd(content):
+    old_value = get_from_bd(content)
+    value = old_value + 1
+    set_to_bd(content, value)
+
+def count_files(content):
+    if content == "СВ":
+        count_story_video = len(os.listdir("storys/video"))
+        return count_story_video
+    if content == "СФ":
+        count_story_photo = len(os.listdir("storys/photo"))
+        return count_story_photo
+    if content == "ВП":
+        count_post_video_temp = os.listdir("video_posts")
+        co1 = 0
+        for file in count_post_video_temp:
+            if file.endswith(".mp4"):
+                co1 += 1
+        count_post_video = co1
+        return count_post_video
+    if content == "ФП":
+        count_post_image = len(os.listdir("photo_posts"))
+        return count_post_image
+    if content == "АП":
+        count_albums = len(os.listdir("albums_posts"))
+        return count_albums
+    if content == "ИТ":
+        count_igtv = len(os.listdir("video_posts/igtv"))
+        return count_igtv
+    if content == "К":
+        count_clips = len(os.listdir("video_posts/clips"))
+        return count_clips
+
+def number_get(chislo):
+    if chislo == 0:
+        return 0
+    else:
+        return chislo+1
+
+def post(faza, t1, t2):
+    faza_process = faza.split("_")
+    contents = get_from_bd(faza).split("-")
+    raznica = (datetime.combine(date.min, t2) - datetime.combine(date.min, t1)).total_seconds() / 60
+    count_content = len(contents)
+    max_time_sleep = math.floor(raznica / count_content)
+    current_position_now = get_from_bd("current_position_content").split("-")
+    if current_position_now[0] == "0":
+        a = -1
+    elif current_position_now[0] == faza_process[0]:
+        a = int(current_position_now[1])-1
+    else:
+        a = -1
+    for i in range(a+1, len(contents)):
+        if contents[i] == "СВ":
+            if count_files(contents[i]) != 0:
+                upload_story_video()
+                add_count_to_bd("uploaded_video_story")
+        if contents[i] == "СФ":
+            if count_files(contents[i]) != 0:
+                upload_story_image()
+                add_count_to_bd("uploaded_photo_story")
+        if contents[i] == "ВП":
+            if count_files(contents[i]) != 0:
+                upload_post_video()
+                add_count_to_bd("uploaded_video_posts")
+        if contents[i] == "ФП":
+            if count_files(contents[i]) != 0:
+                upload_post_image()
+                add_count_to_bd("uploaded_photo_posts")
+        if contents[i] == "АП":
+            if count_files(contents[i]) != 0:
+                upload_album_posts()
+                add_count_to_bd("uploaded_album_posts")
+        if contents[i] == "ИТ":
+            if count_files(contents[i]) != 0:
+                upload_igtv()
+                add_count_to_bd("uploaded_igtv")
+        if contents[i] == "К":
+            if count_files(contents[i]) != 0:
+                upload_clips()
+                add_count_to_bd("uploaded_clips")
+        if faza_process[0] == "morning":
+            set_to_bd("current_position_content", "morning-{}".format(str(i + 1)))
+        if faza_process[0] == "day":
+            set_to_bd("current_position_content", "day-{}".format(str(i + 1)))
+        if faza_process[0] == "evening":
+            set_to_bd("current_position_content", "evening-{}".format(str(i + 1)))
+        time.sleep(random.randint(((max_time_sleep*60)-20), max_time_sleep*60))
+    set_to_bd("{}_process".format(faza_process[0]), True)
+
+
+class StartLoop():
+    def __init__(self):
+        self.loopflag = False
+        self.thread = None
+
+    def start(self, morning_time, day_time, evening_time):
+        if self.loopflag:  # Предотвращение повторного запуска цикла
+            return
+        self.loopflag = True
+        self.thread = threading.Thread(target=self._run_loop, args=(morning_time, day_time, evening_time))
+        self.thread.start()
+
+    def _run_loop(self, morning_time, day_time, evening_time):
+        while self.loopflag:
+            current_time = (datetime.now() + timedelta(hours=0)).time()
+            if (current_time > datetime.strptime(morning_time[0], "%H:%M:%S").time()):
+                if (current_time < datetime.strptime(morning_time[1], "%H:%M:%S").time()):
+                    if get_from_bd("morning_process"):
+                        pass
+                    else:
+                        post("morning_content", datetime.strptime(morning_time[0], "%H:%M:%S").time(),
+                             datetime.strptime(morning_time[1], "%H:%M:%S").time())  # morning
+                if (current_time > datetime.strptime(day_time[0], "%H:%M:%S").time()):
+                    if (current_time < datetime.strptime(day_time[1], "%H:%M:%S").time()):
+                        if get_from_bd("day_process"):
+                            pass
+                        else:
+                            post("day_content", datetime.strptime(day_time[0], "%H:%M:%S").time(),
+                                 datetime.strptime(day_time[1], "%H:%M:%S").time())  # day
+                    if (current_time > datetime.strptime(evening_time[0], "%H:%M:%S").time()):
+                        if (current_time < datetime.strptime(evening_time[1], "%H:%M:%S").time()):
+                            if get_from_bd("evening_process"):
+                                pass
+                            else:
+                                post("evening_content", datetime.strptime(evening_time[0], "%H:%M:%S").time(),
+                                     datetime.strptime(evening_time[1], "%H:%M:%S").time())  # evening
+                        else:
+                            set_to_bd("morning_process", False)
+                            set_to_bd("day_process", False)
+                            set_to_bd("evening_process", False)
+            time.sleep(10)
+
+    def stop(self):
+        self.loopflag = False
+        if self.thread:
+            self.thread.join()
