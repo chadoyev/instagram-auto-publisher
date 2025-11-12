@@ -58,15 +58,15 @@ instagram-auto-publisher/
    ```python
    python get_json.py
    ```
-Enter your Instagram login credentials when prompted.
-A file called postit.json will be created automatically.
+   Enter your Instagram login credentials when prompted.
+   A file called postit.json will be created automatically.
 
 3. **Run the Telegram bot:**
    ```python
    python main.py
    ```
 
-4. ** Configure posting schedule and content type via Telegram commands.**
+4. **Configure posting schedule and content type via Telegram commands.**
 
 ---
 
@@ -78,7 +78,7 @@ A file called postit.json will be created automatically.
 
 ---
 
-##👤 Author
+## 👤 Author
 **Iskander Chadoyev**
 Python developer & automation enthusiast
 📍 Kazakhstan
