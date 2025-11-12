@@ -32,6 +32,7 @@ The system downloads media from various social platforms (TikTok, Instagram, You
 ---
 
 ## 📂 Project Structure
+```
 instagram-auto-publisher/
 │
 ├── main.py # Telegram bot logic: content management, downloading
@@ -44,7 +45,7 @@ instagram-auto-publisher/
 ├── /video_posts # Video posts (including reels, IGTV)
 ├── /storys # Instagram stories
 └── /albums_posts # Multi-image posts
-
+```
 ---
 
 ## 🚀 Setup & Usage
@@ -54,15 +55,17 @@ instagram-auto-publisher/
    pip install -r requirements.txt
    ```
 2. **Generate the Instagram session file:**
-  ```python
-  python get_json.py
-  ```
+   ```python
+   python get_json.py
+   ```
 Enter your Instagram login credentials when prompted.
 A file called postit.json will be created automatically.
+
 3. **Run the Telegram bot:**
-  ```python
-  python main.py
-  ```
+   ```python
+   python main.py
+   ```
+
 4. ** Configure posting schedule and content type via Telegram commands.**
 
 ---
