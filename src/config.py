@@ -23,7 +23,7 @@ class Config:
     # ========================================
     INSTAGRAM_USERNAME: str = os.getenv("INSTAGRAM_USERNAME", "")
     INSTAGRAM_PASSWORD: str = os.getenv("INSTAGRAM_PASSWORD", "")
-    INSTAGRAM_SESSION_FILE: str = os.getenv("INSTAGRAM_SESSION_FILE", "authorize.json")
+    INSTAGRAM_SESSION_FILE: str = os.getenv("INSTAGRAM_SESSION_FILE", "data/authorize.json")
     
     # ========================================
     # Telegram Bot настройки
@@ -65,7 +65,7 @@ class Config:
     # ========================================
     # База данных
     # ========================================
-    DATABASE_PATH: str = os.getenv("DATABASE_PATH", "db.db")
+    DATABASE_PATH: str = os.getenv("DATABASE_PATH", "data/db.db")
     
     # ========================================
     # Пути к директориям
@@ -116,6 +116,7 @@ class Config:
     def create_directories(cls) -> None:
         """Создаёт все необходимые директории для контента"""
         directories = [
+            "data",  # Для БД и сессии
             cls.CONTENT_BASE_DIR,
             cls.STORIES_VIDEO_DIR,
             cls.STORIES_PHOTO_DIR,

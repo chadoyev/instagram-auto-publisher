@@ -12,21 +12,15 @@ services:
     
     # Монтируем volumes для персистентности данных
     volumes:
-      # База данных
-      - ./db.db:/app/db.db
+      # Все данные в одной директории
+      - bot_data:/app/data
       
-      # Instagram сессия
-      - ./authorize.json:/app/authorize.json
-      
-      # Контент директории
+      # Контент директории (bind mounts для удобного доступа)
       - ./storys:/app/storys
       - ./video_posts:/app/video_posts
       - ./photo_posts:/app/photo_posts
       - ./albums_posts:/app/albums_posts
       - ./users_content:/app/users_content
-      
-      # Водяной знак (если есть)
-      - ./logo.png:/app/logo.png
     
     # Логи
     logging:
