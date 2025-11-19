@@ -38,9 +38,6 @@ services:
         reservations:
           cpus: '0.5'
           memory: 512M
-    
-    # Политика перезапуска
-    restart: unless-stopped
 
 # Volumes для данных (опционально, если хотите использовать именованные volumes)
 volumes:
