@@ -430,11 +430,13 @@ def create_instagram_client() -> Client:
         Client: Аутентифицированный клиент
     """
     import json
+    from pathlib import Path
     
     session_file = Config.INSTAGRAM_SESSION_FILE
+    session_path = Path(session_file)
     
     # Пробуем загрузить существующую сессию
-    if os.path.exists(session_file):
+    if session_path.exists() and session_path.is_file():
         try:
             with open(session_file, 'r') as f:
                 session_data = json.load(f)
@@ -445,8 +447,12 @@ def create_instagram_client() -> Client:
             print(f"⚠️ Не удалось загрузить сессию: {e}")
     
     # Если сессии нет или она не работает, логинимся
+    print("🔐 Вход в Instagram...")
     client = Client()
     client.login(Config.INSTAGRAM_USERNAME, Config.INSTAGRAM_PASSWORD)
+    
+    # Создаём директорию для сессии если её нет
+    session_path.parent.mkdir(parents=True, exist_ok=True)
     
     # Сохраняем сессию
     with open(session_file, 'w') as f:
