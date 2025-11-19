@@ -28,23 +28,6 @@ RUN pip install --no-cache-dir -r requirements.txt
 # Копируем исходный код
 COPY . .
 
-# Создаём директории для контента
-RUN mkdir -p \
-    storys/video \
-    storys/photo \
-    video_posts/igtv \
-    video_posts/clips \
-    photo_posts \
-    albums_posts \
-    users_content
-
-# Создаём непривилегированного пользователя для безопасности
-# RUN useradd -m -u 1000 botuser && \
-#     chown -R botuser:botuser /app
-
-# Переключаемся на непривилегированного пользователя
-# USER botuser - закомментировано для решения проблемы с правами в volumes
-
 # Переменные окружения
 ENV PYTHONUNBUFFERED=1
 ENV PYTHONDONTWRITEBYTECODE=1
