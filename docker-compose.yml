@@ -6,6 +6,9 @@ services:
     container_name: instagram-auto-publisher
     restart: unless-stopped
     
+    # Запускаем от имени текущего пользователя (решает проблему с правами)
+    user: "${UID:-1000}:${GID:-1000}"
+    
     # Переменные окружения (можно переопределить через .env файл)
     env_file:
       - .env

@@ -39,11 +39,11 @@ RUN mkdir -p \
     users_content
 
 # Создаём непривилегированного пользователя для безопасности
-RUN useradd -m -u 1000 botuser && \
-    chown -R botuser:botuser /app
+# RUN useradd -m -u 1000 botuser && \
+#     chown -R botuser:botuser /app
 
 # Переключаемся на непривилегированного пользователя
-USER botuser
+# USER botuser - закомментировано для решения проблемы с правами в volumes
 
 # Переменные окружения
 ENV PYTHONUNBUFFERED=1
