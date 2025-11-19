@@ -105,7 +105,7 @@ class Database:
         cursor = self.cursor
         cursor.execute("SELECT COUNT(*) FROM settings")
         if cursor.fetchone()[0] == 0:
-            cursor.execute("INSERT INTO settings DEFAULT VALUES")
+            cursor.execute("INSERT INTO settings (id) VALUES (1)")
         
         # Таблица описаний медиа (для совместимости со старым кодом)
         self.cursor.execute("""
