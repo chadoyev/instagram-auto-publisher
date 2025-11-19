@@ -102,9 +102,10 @@ class Database:
         """)
         
         # Вставляем начальные настройки если их нет
-        self.cursor.execute("SELECT COUNT(*) FROM settings")
-        if self.cursor.fetchone()[0] == 0:
-            self.cursor.execute("INSERT INTO settings DEFAULT VALUES")
+        cursor = self.cursor
+        cursor.execute("SELECT COUNT(*) FROM settings")
+        if cursor.fetchone()[0] == 0:
+            cursor.execute("INSERT INTO settings DEFAULT VALUES")
         
         # Таблица описаний медиа (для совместимости со старым кодом)
         self.cursor.execute("""
