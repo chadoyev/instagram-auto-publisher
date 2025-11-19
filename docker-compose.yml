@@ -1,0 +1,55 @@
+version: '3.8'
+
+services:
+  instagram-bot:
+    build: .
+    container_name: instagram-auto-publisher
+    restart: unless-stopped
+    
+    # Переменные окружения (можно переопределить через .env файл)
+    env_file:
+      - .env
+    
+    # Монтируем volumes для персистентности данных
+    volumes:
+      # База данных
+      - ./db.db:/app/db.db
+      
+      # Instagram сессия
+      - ./authorize.json:/app/authorize.json
+      
+      # Контент директории
+      - ./storys:/app/storys
+      - ./video_posts:/app/video_posts
+      - ./photo_posts:/app/photo_posts
+      - ./albums_posts:/app/albums_posts
+      - ./users_content:/app/users_content
+      
+      # Водяной знак (если есть)
+      - ./logo.png:/app/logo.png
+    
+    # Логи
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+    
+    # Ресурсы (опционально)
+    deploy:
+      resources:
+        limits:
+          cpus: '2'
+          memory: 2G
+        reservations:
+          cpus: '0.5'
+          memory: 512M
+    
+    # Политика перезапуска
+    restart: unless-stopped
+
+# Volumes для данных (опционально, если хотите использовать именованные volumes)
+volumes:
+  bot_data:
+    driver: local
+

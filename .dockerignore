@@ -1,0 +1,52 @@
+# Git
+.git
+.gitignore
+
+# Python
+__pycache__
+*.pyc
+*.pyo
+*.pyd
+.Python
+*.so
+pip-log.txt
+
+# Virtual environments
+venv/
+ENV/
+env/
+.venv
+
+# IDE
+.vscode
+.idea
+*.swp
+*.swo
+
+# Environment files
+.env
+.env.local
+
+# Documentation
+README.md
+*.md
+
+# Temporary and cache
+*.log
+tmp/
+temp/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Content (should be mounted as volumes)
+users_content/
+storys/
+video_posts/
+photo_posts/
+albums_posts/
+
+# Database (should be mounted as volume)
+*.db
+
