@@ -12,15 +12,18 @@ services:
     
     # Монтируем volumes для персистентности данных
     volumes:
-      # Все данные в одной директории
-      - bot_data:/app/data
+      # Монтируем всю папку проекта (самый простой вариант)
+      - ./:/app
       
-      # Контент директории (bind mounts для удобного доступа)
-      - ./storys:/app/storys
-      - ./video_posts:/app/video_posts
-      - ./photo_posts:/app/photo_posts
-      - ./albums_posts:/app/albums_posts
-      - ./users_content:/app/users_content
+      # Или можно монтировать только нужное (закомментировано):
+      # - ./storys:/app/storys
+      # - ./video_posts:/app/video_posts
+      # - ./photo_posts:/app/photo_posts
+      # - ./albums_posts:/app/albums_posts
+      # - ./users_content:/app/users_content
+      # - ./.env:/app/.env:ro
+      # - ./db.db:/app/db.db
+      # - ./authorize.json:/app/authorize.json
     
     # Логи
     logging:
@@ -39,8 +42,8 @@ services:
           cpus: '0.5'
           memory: 512M
 
-# Volumes для данных (опционально, если хотите использовать именованные volumes)
-volumes:
-  bot_data:
-    driver: local
+# Volumes не нужны если монтируем всю директорию напрямую
+# volumes:
+#   bot_data:
+#     driver: local
 

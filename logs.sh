@@ -5,3 +5,4 @@ echo "📋 Логи Instagram Auto Publisher:"
 echo "=================================="
 docker-compose logs -f --tail=100
 
+

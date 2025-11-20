@@ -44,7 +44,7 @@ class Database:
     
     def _ensure_tables(self) -> None:
         """Создаёт необходимые таблицы если они не существуют"""
-        # Таблица пользователей
+        # Таблица пользователей (структура из OLD версии)
         self.cursor.execute("""
             CREATE TABLE IF NOT EXISTS users (
                 user_id INTEGER PRIMARY KEY,
@@ -54,33 +54,35 @@ class Database:
                 active_content TEXT DEFAULT 'NO',
                 active_menu TEXT DEFAULT 'menu',
                 album_messages TEXT DEFAULT '[]',
-                worker BOOLEAN DEFAULT 1,
                 tiktok_loaded INTEGER DEFAULT 0,
                 yt_loaded INTEGER DEFAULT 0,
                 instagram_loaded INTEGER DEFAULT 0,
-                approved_content INTEGER DEFAULT 0,
-                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+                approved_content INTEGER DEFAULT 0
             )
         """)
         
-        # Таблица контента
+        # Таблица контента (структура из OLD версии)
         self.cursor.execute("""
             CREATE TABLE IF NOT EXISTS contents (
-                id INTEGER PRIMARY KEY AUTOINCREMENT,
-                user_id INTEGER NOT NULL,
-                link_content TEXT UNIQUE NOT NULL,
+                user_id INTEGER,
+                link_content TEXT UNIQUE,
                 media_pk TEXT,
-                content_description TEXT,
-                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-                FOREIGN KEY (user_id) REFERENCES users(user_id)
+                content_description TEXT
             )
         """)
         
-        # Таблица настроек
+        # Таблица описаний медиа (из OLD версии для совместимости)
+        self.cursor.execute("""
+            CREATE TABLE IF NOT EXISTS media_descriptions (
+                media_pk TEXT PRIMARY KEY,
+                media_description TEXT
+            )
+        """)
+        
+        # Таблица настроек (структура из OLD версии)
         self.cursor.execute("""
             CREATE TABLE IF NOT EXISTS settings (
-                id INTEGER PRIMARY KEY DEFAULT 1,
-                autopost_status BOOLEAN DEFAULT 0,
+                autopost_status INTEGER DEFAULT 0,
                 morning_time TEXT DEFAULT '08:00:00-12:00:00',
                 day_time TEXT DEFAULT '12:00:00-18:00:00',
                 evening_time TEXT DEFAULT '18:00:00-23:00:00',
@@ -95,9 +97,9 @@ class Database:
                 uploaded_igtv INTEGER DEFAULT 0,
                 uploaded_clips INTEGER DEFAULT 0,
                 current_position_content TEXT DEFAULT '0-0',
-                morning_process BOOLEAN DEFAULT 0,
-                day_process BOOLEAN DEFAULT 0,
-                evening_process BOOLEAN DEFAULT 0
+                morning_process INTEGER DEFAULT 0,
+                day_process INTEGER DEFAULT 0,
+                evening_process INTEGER DEFAULT 0
             )
         """)
         
@@ -105,15 +107,16 @@ class Database:
         cursor = self.cursor
         cursor.execute("SELECT COUNT(*) FROM settings")
         if cursor.fetchone()[0] == 0:
-            cursor.execute("INSERT INTO settings (id) VALUES (1)")
-        
-        # Таблица описаний медиа (для совместимости со старым кодом)
-        self.cursor.execute("""
-            CREATE TABLE IF NOT EXISTS media_descriptions (
-                media_pk TEXT PRIMARY KEY,
-                media_description TEXT
-            )
-        """)
+            cursor.execute("""INSERT INTO settings (
+                autopost_status, morning_time, day_time, evening_time,
+                morning_content, day_content, evening_content,
+                uploaded_video_story, uploaded_photo_story, uploaded_video_posts,
+                uploaded_photo_posts, uploaded_album_posts, uploaded_igtv,
+                uploaded_clips, current_position_content,
+                morning_process, day_process, evening_process
+            ) VALUES (0, '08:00:00-12:00:00', '12:00:00-18:00:00', '18:00:00-23:00:00',
+                     'СВ-СФ-ФП', 'ВП-К-ФП', 'СВ-АП-К',
+                     0, 0, 0, 0, 0, 0, 0, '0-0', 0, 0, 0)""")
         
         self.connection.commit()
     
@@ -153,6 +156,22 @@ class Database:
         self.cursor.execute(
             f"UPDATE users SET {field} = ? WHERE user_id = ?",
             (str(value), user_id)
+        )
+        self.connection.commit()
+    
+    def get_user_state(self, user_id: int, state_key: str) -> Optional[str]:
+        """Получает временное состояние пользователя"""
+        result = self.cursor.execute(
+            f"SELECT {state_key} FROM users WHERE user_id = ?",
+            (user_id,)
+        ).fetchone()
+        return result[0] if result else None
+    
+    def set_user_state(self, user_id: int, state_key: str, state_value: Optional[str]) -> None:
+        """Устанавливает временное состояние пользователя"""
+        self.cursor.execute(
+            f"UPDATE users SET {state_key} = ? WHERE user_id = ?",
+            (state_value, user_id)
         )
         self.connection.commit()
     
@@ -203,14 +222,14 @@ class Database:
     def get_setting(self, field: str) -> Any:
         """Получает значение настройки"""
         result = self.cursor.execute(
-            f"SELECT {field} FROM settings WHERE id = 1"
+            f"SELECT {field} FROM settings"
         ).fetchone()
         return result[0] if result else None
     
     def set_setting(self, field: str, value: Any) -> None:
         """Устанавливает значение настройки"""
         self.cursor.execute(
-            f'UPDATE settings SET "{field}" = ? WHERE id = 1',
+            f'UPDATE settings SET "{field}" = ?',
             (value,)
         )
         self.connection.commit()

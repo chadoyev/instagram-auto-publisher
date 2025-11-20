@@ -96,11 +96,11 @@ class TikTokDownloader(ContentDownloader):
             author = result["data"]["author"]["nickname"]
             desc = result["data"]["desc"]
             
-            # Формируем описание
-            if not desc:
-                desc = f"{self.default_caption}\n\nАвтор(ТТ): {author}"
+            # Формируем описание (логика из OLD версии)
+            if desc == "":
+                desc = self.default_caption + "\n\n" + "Автор(ТТ): " + author
             else:
-                desc = f"{desc}\n\nАвтор(ТТ): {author}"
+                desc = desc + "\n\n" + "Автор(ТТ): " + author
             
             # Проверяем существование файла
             for category in ['storys/video', 'video_posts/clips', 'video_posts/igtv']:
@@ -171,11 +171,11 @@ class YouTubeDownloader(ContentDownloader):
             title = yt.title or ""
             author = yt.author
             
-            # Формируем описание
-            if not title:
-                description = f"{self.default_caption}\n\nАвтор(YT): {author}"
+            # Формируем описание (логика из OLD версии)
+            if title == "":
+                description = self.default_caption + "\n\n" + "Автор(YT): " + author
             else:
-                description = f"{title}\n\nАвтор(YT): {author}"
+                description = title + "\n\n" + "Автор(YT): " + author
             
             # Проверяем существование файла
             for category in ['storys/video', 'video_posts/clips', 'video_posts/igtv']:
@@ -313,7 +313,10 @@ class InstagramDownloader(ContentDownloader):
         media_type = result["media_type"]
         product_type = result.get("product_type", "feed")
         pk = result["pk"]
-        caption = result.get("caption_text", "") or self.default_caption
+        caption = result.get("caption_text", "")
+        if caption == "":
+            caption = self.default_caption
+        # В OLD версии автора не добавляли для Instagram постов
         
         # Видео пост
         if media_type == 2:
@@ -408,4 +411,5 @@ def get_downloader(url: str) -> Optional[ContentDownloader]:
 
 if __name__ == "__main__":
     print("✅ Модуль downloaders.py загружен успешно!")
+
 

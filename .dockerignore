@@ -50,3 +50,8 @@ albums_posts/
 # Database (should be mounted as volume)
 *.db
 
+# Instagram
+authorize.json
+*.json
+
+

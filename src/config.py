@@ -23,19 +23,42 @@ class Config:
     # ========================================
     INSTAGRAM_USERNAME: str = os.getenv("INSTAGRAM_USERNAME", "")
     INSTAGRAM_PASSWORD: str = os.getenv("INSTAGRAM_PASSWORD", "")
-    INSTAGRAM_SESSION_FILE: str = os.getenv("INSTAGRAM_SESSION_FILE", "data/authorize.json")
+    INSTAGRAM_SESSION_FILE: str = os.getenv("INSTAGRAM_SESSION_FILE", "authorize.json")
     
     # ========================================
     # Telegram Bot настройки
     # ========================================
     TELEGRAM_BOT_TOKEN: str = os.getenv("TELEGRAM_BOT_TOKEN", "")
-    TELEGRAM_ADMIN_ID_1: Optional[int] = int(os.getenv("TELEGRAM_ADMIN_ID_1", "0")) or None
-    TELEGRAM_ADMIN_ID_2: Optional[int] = int(os.getenv("TELEGRAM_ADMIN_ID_2", "0")) or None
     
     @classmethod
     def get_admin_ids(cls) -> list[int]:
-        """Возвращает список ID администраторов (фильтрует пустые значения)"""
-        return [admin_id for admin_id in [cls.TELEGRAM_ADMIN_ID_1, cls.TELEGRAM_ADMIN_ID_2] if admin_id]
+        """Возвращает список ID администраторов (минимум 1 админ обязателен)"""
+        # Получаем все админ ID из переменных окружения
+        admin_ids = []
+        
+        # Поддержка нескольких админов через запятую или по отдельности
+        admin_ids_str = os.getenv("TELEGRAM_ADMIN_IDS", "")
+        if admin_ids_str:
+            # Формат: 123456789,987654321
+            for admin_id in admin_ids_str.split(","):
+                admin_id = admin_id.strip()
+                if admin_id.isdigit():
+                    admin_ids.append(int(admin_id))
+        
+        # Также поддержка отдельных переменных TELEGRAM_ADMIN_ID_1, TELEGRAM_ADMIN_ID_2 и т.д.
+        i = 1
+        while True:
+            admin_id = os.getenv(f"TELEGRAM_ADMIN_ID_{i}", "")
+            if not admin_id:
+                break
+            if admin_id.isdigit():
+                admin_ids.append(int(admin_id))
+            i += 1
+        
+        # Убираем дубликаты
+        admin_ids = list(set(admin_ids))
+        
+        return admin_ids
     
     # ========================================
     # API ключи
@@ -46,7 +69,7 @@ class Config:
     # ========================================
     # Контент настройки
     # ========================================
-    DEFAULT_CAPTION: str = os.getenv("DEFAULT_CAPTION", "Подписывайся на ...")
+    DEFAULT_CAPTION: str = os.getenv("DEFAULT_CAPTION", "Подписывайся на squanch.tv")
     WATERMARK_LOGO_PATH: str = os.getenv("WATERMARK_LOGO_PATH", "logo.png")
     
     # ========================================
@@ -65,7 +88,7 @@ class Config:
     # ========================================
     # База данных
     # ========================================
-    DATABASE_PATH: str = os.getenv("DATABASE_PATH", "data/db.db")
+    DATABASE_PATH: str = os.getenv("DATABASE_PATH", "db.db")
     
     # ========================================
     # Пути к директориям
@@ -102,9 +125,10 @@ class Config:
         if not cls.TELEGRAM_BOT_TOKEN:
             errors.append("TELEGRAM_BOT_TOKEN не установлен")
             
-        # Проверка ID администраторов
-        if not cls.get_admin_ids():
-            errors.append("Не установлен ни один TELEGRAM_ADMIN_ID")
+        # Проверка ID администраторов (минимум 1)
+        admin_ids = cls.get_admin_ids()
+        if not admin_ids or len(admin_ids) < 1:
+            errors.append("Должен быть указан хотя бы один администратор (TELEGRAM_ADMIN_IDS или TELEGRAM_ADMIN_ID_1)")
             
         if errors:
             error_msg = "Отсутствуют критические настройки:\n" + "\n".join(f"- {e}" for e in errors)

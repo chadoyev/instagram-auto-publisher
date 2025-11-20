@@ -28,6 +28,11 @@ RUN pip install --no-cache-dir -r requirements.txt
 # Копируем исходный код
 COPY . .
 
+# Создаём директории
+RUN mkdir -p /app/storys/video /app/storys/photo \
+    /app/video_posts/clips /app/video_posts/igtv \
+    /app/photo_posts /app/albums_posts /app/users_content
+
 # Переменные окружения
 ENV PYTHONUNBUFFERED=1
 ENV PYTHONDONTWRITEBYTECODE=1
