@@ -13,7 +13,7 @@ moviepy>=1.0.3
 pytubefix>=6.0.0
 
 # Image Processing
-Pillow>=10.0.0
+Pillow==9.5.0
 
 # HTTP Requests
 requests>=2.31.0
