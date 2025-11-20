@@ -131,7 +131,7 @@ class TikTokDownloader(ContentDownloader):
             shutil.move(temp_file, final_path)
             
             # Сохраняем в БД
-            is_new = self._save_content_to_db(user_id, video_id, video_id, desc)
+            is_new = self._save_content_to_db(user_id, url, video_id, desc)
             
             if is_new:
                 # Обновляем статистику пользователя
@@ -313,10 +313,12 @@ class InstagramDownloader(ContentDownloader):
         media_type = result["media_type"]
         product_type = result.get("product_type", "feed")
         pk = result["pk"]
-        caption = result.get("caption_text", "")
-        if caption == "":
-            caption = self.default_caption
-        # В OLD версии автора не добавляли для Instagram постов
+        caption = result.get("caption_text", "") or self.default_caption
+        author = result['user']['username']
+        if not caption:
+            caption = f"{self.default_caption}\n\nАвтор(IG): {author}"
+        else:
+            caption = f"{caption}\n\nАвтор(IG): {author}"
         
         # Видео пост
         if media_type == 2:
