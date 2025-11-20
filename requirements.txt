@@ -1,25 +1,25 @@
 # Instagram Auto Publisher - Dependencies
 
 # Core Instagram API
-instagrapi>=2.1.0
+instagrapi
 
 # Telegram Bot
-pyTelegramBotAPI>=4.14.0
+pyTelegramBotAPI
 
 # Video Processing
-moviepy>=1.0.3
+moviepy
 
 #YouTube
-pytubefix>=6.0.0
+pytubefix
 
 # Image Processing
 Pillow==9.5.0
 
 # HTTP Requests
-requests>=2.31.0
+requests
 
 # Task Scheduling
-schedule>=1.2.0
+schedule
 
 # Environment Variables
 python-dotenv==1.0.0
