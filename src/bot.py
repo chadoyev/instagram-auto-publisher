@@ -343,7 +343,7 @@ class InstagramBot:
         """Получает описание и тип контента из БД"""
         caption = ""
         content_id = str(os.path.splitext(os.path.basename(file))[0])
-        result = self.db.cursor.execute(f"SELECT content_description FROM contents WHERE link_content = '{content_id}'").fetchone()
+        result = self.db.cursor.execute(f"SELECT content_description FROM contents WHERE media_pk = '{content_id}'").fetchone()
         if result != None:
             desc = "\n\n*Описание:*\n`{}`".format(result[0])
         else:
