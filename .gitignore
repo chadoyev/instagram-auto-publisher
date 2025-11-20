@@ -52,7 +52,7 @@ photo_posts/
 albums_posts/
 
 # Watermark & Media
-logo.png
+!logo.png
 *.mp4
 *.jpg
 *.jpeg
