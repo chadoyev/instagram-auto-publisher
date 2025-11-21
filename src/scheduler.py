@@ -36,7 +36,7 @@ class StartLoop():
             file = os.path.splitext(file)[0]
             file = (file.split('_')[ppp])
         try:
-            baza = "SELECT media_description FROM media_descriptions WHERE media_pk = {}".format(file)
+            baza = "SELECT content_description FROM contents WHERE media_pk = {}".format(file)
             result = self.db.cursor.execute(baza).fetchone()
             return (result[0])
         except:

@@ -190,7 +190,7 @@ class InstagramBot:
             file = os.path.splitext(file)[0]
             file = (file.split('_')[ppp])
         try:
-            baza = "SELECT media_description FROM media_descriptions WHERE media_pk = {}".format(file)
+            baza = "SELECT content_description FROM contents WHERE media_pk = {}".format(file)
             result = self.db.cursor.execute(baza).fetchone()
             return (result[0])
         except:
@@ -534,7 +534,7 @@ class InstagramBot:
                     self.bot.delete_message(chat_id=message.chat.id, message_id=id)
         self.bot.delete_message(chat_id=message.chat.id, message_id=old_message)
         content_id = str(os.path.splitext(os.path.basename(self.get_active_content(message.chat.id)))[0])
-        self.db.cursor.execute(f"UPDATE contents SET content_description = '{message.text}' WHERE link_content = '{content_id}'")
+        self.db.cursor.execute(f"UPDATE contents SET content_description = '{message.text}' WHERE media_pk = '{content_id}'")
         self.db.connection.commit()
         self.send_anket(message, active_menu)
     

@@ -71,13 +71,6 @@ class Database:
             )
         """)
         
-        # Таблица описаний медиа (из OLD версии для совместимости)
-        self.cursor.execute("""
-            CREATE TABLE IF NOT EXISTS media_descriptions (
-                media_pk TEXT PRIMARY KEY,
-                media_description TEXT
-            )
-        """)
         
         # Таблица настроек (структура из OLD версии)
         self.cursor.execute("""
@@ -264,7 +257,7 @@ class Database:
     def get_media_description(self, media_pk: str) -> str:
         """Получает описание медиа по PK (старая таблица)"""
         result = self.cursor.execute(
-            "SELECT media_description FROM media_descriptions WHERE media_pk = ?",
+            "SELECT content_description FROM contents WHERE media_pk = ?",
             (media_pk,)
         ).fetchone()
         return result[0] if result else " "
