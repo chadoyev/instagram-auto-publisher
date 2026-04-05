@@ -1,0 +1,29 @@
+# Telegram bot
+aiogram>=3.27.0
+
+# Database
+sqlalchemy[asyncio]>=2.0
+asyncpg>=0.29
+
+# Redis (FSM storage)
+redis>=5.0
+
+# Instagram publishing
+instagrapi>=2.3.0
+
+# Downloading
+aiohttp>=3.9
+yt-dlp>=2024.1
+
+# Scheduling
+apscheduler>=3.10,<4
+
+# Config
+pydantic>=2.5
+pydantic-settings>=2.1
+
+# Media
+Pillow>=10.0
+
+# Utilities
+cachetools>=5.3

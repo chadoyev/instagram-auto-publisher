@@ -1,0 +1,93 @@
+services:
+  bot:
+    image: ${DOCKER_IMAGE:-chadoyev/instagram-auto-publisher:latest}
+    build: .
+    container_name: ig-publisher-bot
+    restart: unless-stopped
+    env_file: .env
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      tiktok-api:
+        condition: service_healthy
+    volumes:
+      - media_data:/app/media
+      - session_data:/app/session_data
+      - wg_config:/app/wg_config:ro
+    ports:
+      - "${WEBHOOK_PORT:-8081}:${WEBHOOK_PORT:-8081}"
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "3"
+
+  postgres:
+    image: postgres:16-alpine
+    container_name: ig-publisher-db
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: ${DB_NAME:-bot}
+      POSTGRES_USER: ${DB_USER:-bot}
+      POSTGRES_PASSWORD: ${DB_PASSWORD:-bot}
+    volumes:
+      - pg_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${DB_USER:-bot}"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
+
+  redis:
+    image: redis:7-alpine
+    container_name: ig-publisher-redis
+    restart: unless-stopped
+    volumes:
+      - redis_data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
+
+  tiktok-api:
+    image: evil0ctal/douyin_tiktok_download_api:latest
+    container_name: ig-publisher-tiktok-api
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD-SHELL", "python3 -c \"import urllib.request; urllib.request.urlopen('http://localhost:80/docs')\""]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 20s
+
+  wireguard:
+    image: lscr.io/linuxserver/wireguard
+    container_name: ig-publisher-vpn
+    restart: unless-stopped
+    cap_add:
+      - NET_ADMIN
+      - SYS_MODULE
+    environment:
+      - PUID=1000
+      - PGID=1000
+      - TZ=Europe/Moscow
+      - SERVERURL=auto
+      - PEERS=1
+      - PEERDNS=auto
+    volumes:
+      - wg_config:/config
+      - /lib/modules:/lib/modules
+    ports:
+      - "51820:51820/udp"
+    sysctls:
+      - net.ipv4.conf.all.src_valid_mark=1
+
+volumes:
+  pg_data:
+  redis_data:
+  media_data:
+  session_data:
+  wg_config:

@@ -1,0 +1,45 @@
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+dist/
+build/
+.eggs/
+venv/
+.venv/
+
+# Environment
+.env
+
+# IDE
+.vscode/
+.idea/
+.cursor/
+*.swp
+*.swo
+
+# Instagram session
+session.json
+session_data/
+authorize.json
+wg_config/
+
+# Database
+*.db
+
+# Media files (generated at runtime)
+media/
+users_content/
+video_posts/
+albums_posts/
+photo_posts/
+storys/
+data/
+logo.png
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log
